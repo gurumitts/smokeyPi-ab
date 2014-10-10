@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+
+</head>
+<style>
+
+    h4 {
+    margin-top: 25px;
+    }
+    .row {
+    margin-bottom: 20px;
+    }
+    .row .row {
+    margin-top: 10px;
+    margin-bottom: 0;
+    }
+    [class*="col-"] {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    background-color: #eee;
+    background-color: rgba(86,61,124,.15);
+    border: 1px solid #ddd;
+    border: 1px solid rgba(86,61,124,.2);
+    }
+
+    hr {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    }
+
+    body {
+    font: 10px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+    }
+
+    .area {
+    fill: steelblue;
+    }
+
+</style>
+<body>
+<div class="container">
+
+    <div class="page-header">
+        <h1>SmokeyPi-ab</h1>
+
+        <p class="lead">Current Status:  Temp: 78.78, Heatsource is on</p>
+    </div>
+
+    <h3>Temperature</h3>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div id='chart'/>
+        </div>
+    </div>
+</div>
+
+</body>
+
+
+<script src="http://d3js.org/d3.v3.js"></script>
+
+<script>
+var margin = {top: 20, right: 20, bottom: 30, left: 50},
+  width = 1000 - margin.left - margin.right,
+  height = 400 - margin.top - margin.bottom;
+
+  var x = d3.time.scale().range([0, width]);
+  var y = d3.scale.linear().range([height, 0]);
+
+  var xAxis = d3.svg.axis().scale(x).orient("bottom");
+  var yAxis = d3.svg.axis().scale(y).orient("left");
+
+  var area = d3.svg.area()
+      .x(function(d) { return x(d.x); })
+      .y0(height)
+      .y1(function(d) { return y(d.y); });
+
+  var svg = d3.select("div#chart").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+  var data = [];
+
+  var format = d3.time.format("%Y-%m-%d %H:%M:%S")
+
+  x.domain(d3.extent(data, function(d) { return d.x; }));
+  y.domain([0, d3.max(data, function(d) { return d.y; })+30]);
+
+  svg.append("path")
+      .data([data])
+      .attr("class", "area")
+      .attr("d", area);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Temperature (f)");
+
+function refresh(){
+
+
+    x.domain(d3.extent(data, function(d) { return d.x; }));
+    y.domain([0, d3.max(data, function(d) { return d.y; })+30]);
+
+    svg.select("g.x.axis").call(xAxis);
+    svg.select("g.y.axis").call(yAxis);
+    svg.selectAll("path").data([data])
+        .attr("d", area);
+};
+
+var idx = 1
+function reload(){
+    d3.json("/temps/"+idx, function(error, json) {
+        if (error) return console.warn(error);
+        json.forEach(function(d) {
+            d.x = format.parse(d[1]);
+            d.y = +d[2];
+            data.push(d)
+        });
+        if(data.length > 2){
+            refresh()
+        }
+        idx++
+    });
+}
+
+var autoReload = setInterval(function(){reload()}, 2000);
+
+function stopReload() {
+    clearInterval(autoReload);
+}
+
+
+
+
+
+</script>
