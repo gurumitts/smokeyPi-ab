@@ -4,7 +4,7 @@ class DataStore:
 
     def __init__(self):
         #print 'Preparing data store...'
-        self.connection = sqlite3.connect('app.db')
+        self.connection = sqlite3.connect('app.sqlite3.db')
         self.connection.row_factory = sqlite3.Row
         cursor = self.connection.cursor()
         try:
