@@ -17,15 +17,18 @@ The RasphberryPi runs 2 application:
   - Set the target temperature
   - Enable / disable the heat source
 
+![Alt text](//screenshot1.png?raw=true )
 
 **Please note** that I am not an expert by any means with electronic circuits, in fact a secondary object was to learn more about circuits.  
 
 
 ###Project dependencies:
+
 ####Hardware:
 1. RaspberryPI (any model should work - I used a b+)
 2. High Temp Waterproof DS18B20 Digital temperature sensor (http://www.adafruit.com/product/642)
 3. Powerswitch tail 2 (http://www.adafruit.com/product/268)
+
 ####Software:
 1. Flask
 2. APScheduler
