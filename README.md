@@ -4,7 +4,7 @@ A while back I built a homemade smoker based on the designs of Alton Brown:  htt
 <br> It worked and we had some really great eats but it was a lot of work to keep the smoker at the target temperature.  It took constant supervision and tweaking of the heat source to maintain it. 
 
 
-To solve that problem I started this personal project.  Using a RasphberryPi to monitor the temperature inside the smoker and controlling the heat source directly will allow me to focus on the food and company instead of the heat source.
+To solve that problem (but really mostly to learn something new) I started this personal project.  Using a RasphberryPi to monitor the temperature inside the smoker and controlling the heat source directly will allow me to focus on the food and company instead of the heat source.
 
 The RasphberryPi runs 2 application:
 - control.py
