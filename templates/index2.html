@@ -2,8 +2,8 @@
 <meta charset="utf-8">
 <head>
     <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="/static/bootstrap-switch.min.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link href="/static/c3.css" rel="stylesheet" type="text/css">
 </head>
 <style>
 
@@ -24,8 +24,21 @@
     margin-bottom: 40px;
     }
 
+    #chart{
+    background-color: #eee;
+    background-color: rgba(86,61,124,.15);
+    }
 
+    .axis path,
+    .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+    }
 
+    .area {
+    fill: steelblue;
+    }
 
 </style>
 <body>
@@ -33,38 +46,23 @@
 
     <div class="page-header">
         <h1>SmokeyPi-ab</h1>
-    </div>
 
-   <p class="lead">Temperature current: <span style="color: navy" id="currentTemp">78.78</span>,
-       Average: <span class="text-info" id="averageTemp">80</span>,
-       Target: <span class="text-danger" id="targetTemp">{{target_temp}}</span>
-       <br/> Heat source is <span id="heatSource">on</span></p>
-
-    <div class="row">
-
-        <div class="col-md-12">
-            <div id='chart'>
-                <canvas id="mycanvas" width="900" height="400"></canvas>
-            </div>
-        </div>
-    </div>
-    <p class="lead">
-
-                <input id="enabled" type="checkbox"
-                       {% if enabled %}
-                            checked
-                       {% endif %}
-                />
-
+        <p class="lead">Current Temperature: <span class="text-warning" id="currentTemp">78.78</span>, Heat source is <span id="heatSource">on</span></p>
         <button class="btn btn-primary btn-xs" id="mod" data-toggle="modal" data-target="#myModal">
             Settings
         </button>
         <button class="btn btn-primary btn-xs" id="autoRefresh">
             Auto Refresh
         </button>
-        <a href="/history" class="btn btn-primary btn-xs" role="button">History</a>
-    </p>
+    </div>
 
+    <h3>Temperature</h3>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div id='chart'/>
+        </div>
+    </div>
     <div>
 
         <!-- Modal -->
@@ -81,7 +79,11 @@
                         <form class="form-horizontal" role="form">
                             <div class="form-group">
                                 <div class="col-sm-offset-3 col-sm-9">
-
+                                    <div class="checkbox">
+                                        <label>
+                                            <input id="enabled" type="checkbox" checked="{{enabled}}"> Enabled
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -109,54 +111,72 @@
 
 <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
 <script src="http://d3js.org/d3.v3.js"></script>
-<script type="text/javascript" src="/static/smoothie.js"></script>
+<script src="/static/c3.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="/static/bootstrap-switch.min.js"></script>
+
 
 <script>
 
-function pad2(number) { return (number < 10 ? '0' : '') + number }
-function timeFormatter(date) {
-    return pad2(date.getMinutes()) + ':' + pad2(date.getSeconds())
-}
-
+var rangeToDisplay = {{tr}};
 var format = d3.time.format("%Y-%m-%d %H:%M:%S")
 
-var temps = new TimeSeries();
-var avg_temps = new TimeSeries();
-var target_temp = new TimeSeries();
+var chart = c3.generate({
+    data: {
+        x: 'x',
+        xFormat: '%Y-%m-%d %H:%M:%S', // 'xFormat' can be used as custom format of 'x'
+        columns: [
+            ['x'],
+//            ['x', '20130101', '20130102', '20130103', '20130104', '20130105', '20130106'],
+            ['temp']
+        ]
+    },
+    axis: {
+        x: {
+            type: 'timeseries',
+            tick: {
+                format: '%M:%S'
+            }
+        },
+        y: {
+            type:
+            
 
-var smoothie = new SmoothieChart({grid:{fillStyle:'rgba(86,61,124,.15)',millisPerLine:5000,verticalSections:4},
-    timestampFormatter:timeFormatter,
-    labels:{fontSize:15,fillStyle:'#000000'},
-    minValue:{{min_temp}},
-    maxValue:{{max_temp}}})
-smoothie.streamTo(document.getElementById("mycanvas"),1000);
-
-smoothie.addTimeSeries(avg_temps, {lineWidth:2,strokeStyle:'#8080c0',fillStyle:'rgba(128,128,255,0.50)'});
-smoothie.addTimeSeries(temps, {lineWidth:2,strokeStyle:'navy'});
-smoothie.addTimeSeries(target_temp, {lineWidth:2,strokeStyle:'#ff0000'});
+        }
+    },
+    types: {
+           //data1: 'area',
+            temp: 'area-spline'
+        }
+});
 
 
 
 var idx = 1
+
+ x = ['x']
+ytemp = ['temp']
+
 function reload(){
     d3.json("/temps/"+idx, function(error, json) {
+        now = new Date().getTime()
+        timeRange = rangeToDisplay * 60 * 60 * 1000
+        start = now - timeRange
         if (error) return console.warn(error);
         current_idx = 0
+
         json.forEach(function(d) {
             d.dt = format.parse(d[1]);
             d.temp = +d[2];
-            d.avg_temp = +d[4]
-            temps.append(d.dt,d.temp)
-            avg_temps.append(d.dt,d.avg_temp)
+            if(d.dt.getTime() > start ){
+                x.push(d[1])
+                ytemp.push(d[2])
+            }
         });
-
+        chart.load({columns: [x,ytemp]})
         resp_size = json.length;
         if(resp_size > 0){
             idx = json[resp_size-1][0]
             $('#currentTemp').html(json[resp_size-1][2].toFixed(3) )
-            $('#averageTemp').html(json[resp_size-1][4].toFixed(1))
             hs = json[resp_size-1][3]
             $('#heatSource').html(hs)
             if(hs == "on"){
@@ -166,8 +186,8 @@ function reload(){
                 $('#heatSource').addClass('text-primary')
                 $('#heatSource').removeClass('text-danger')
             }
+
         }
-        target_temp.append(new Date(),$('#target_temp').val())
     });
 }
 
@@ -186,11 +206,10 @@ function toggleAutoReload() {
 
 toggleAutoReload()
 
-function saveSettings(e,s) {
+$( "#save-settings" ).click(function() {
     var body = {'enabled': $('#enabled').prop('checked'),
                 'target_temp': $('#target_temp').val()}
     console.log(body)
-    console.log(e)
     $.ajax({
         type:   'POST'  ,
         url:   '/settings',
@@ -199,18 +218,13 @@ function saveSettings(e,s) {
         success:   function(data){
             console.log(data)
             if(data == 'ok'){
-                if(e.target.id == 'save-settings'){
-                    $("#myModal").modal("hide")
-                    location.reload()
-                }
+                $("#myModal").modal("hide");
             }else{
                 alert('Settings not saved: '+data)
             }
         }
     });
-}
-
-$( "#save-settings" ).click(saveSettings);
+});
 
 function setTimeRangeToDisplay(e){
     id = e.target.id
@@ -225,8 +239,6 @@ function setTimeRangeToDisplay(e){
 
 $( ".btn" ).click(setTimeRangeToDisplay)
 
-$("#enabled").bootstrapSwitch()
-$("#enabled").on('switchChange.bootstrapSwitch',saveSettings )
 
 
 

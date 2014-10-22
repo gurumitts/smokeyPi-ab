@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+</head>
+<style>
+
+    h4 {
+    margin-top: 25px;
+    }
+    .row {
+    margin-bottom: 20px;
+    }
+    .row .row {
+    margin-top: 10px;
+    margin-bottom: 0;
+    }
+
+
+    hr {
+    margin-top: 40px;
+    margin-bottom: 40px;
+    }
+
+    #chart{
+    background-color: #eee;
+    background-color: rgba(86,61,124,.15);
+    }
+
+    .axis path,
+    .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+    }
+
+    .area {
+    fill: steelblue;
+    }
+
+
+</style>
+<body>
+<div class="container">
+
+    <div class="page-header">
+        <h1>SmokeyPi-ab</h1>
+    </div>
+
+    <p class="lead">Temperature History</p>
+
+    <div class="row">
+
+        <div class="col-md-12">
+            <div id='chart'>
+            </div>
+        </div>
+    </div>
+    <p class="lead">
+        <a href="/" class="btn btn-primary btn-xs" role="button">Home</a>
+    </p>
+
+</div>
+
+</body>
+
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="http://d3js.org/d3.v3.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+
+<script>
+
+    var margin = {top: 20, right: 20, bottom: 30, left: 50},
+    width = 1000 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
+    var rangeToDisplay = {{tr}};
+
+    var data = [];
+    var format = d3.time.format("%Y-%m-%d %H:%M:%S")
+
+    var x = d3.time.scale().range([0, width]);
+    var y = d3.scale.linear().range([height, 0]);
+
+    var xAxis = d3.svg.axis().scale(x).orient("bottom");
+    var yAxis = d3.svg.axis().scale(y).orient("left");
+
+    var area = d3.svg.area()
+        .x(function(d) { return x(d.dt); })
+        .y0(height)
+        .y1(function(d) { return y(d.temp); });
+
+    var svg = d3.select("div#chart").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    x.domain(d3.extent(data, function(d) { return d.dt; }));
+    y.domain([{{min_temp}}, {{max_temp}}]);
+
+    svg.append("path")
+        .data([data])
+        .attr("class", "area")
+        .attr("d", area);
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+        .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("Temperature (f)");
+
+    function refresh(){
+        x.domain(d3.extent(data, function(d) { return d.dt; }));
+        y.domain([{{min_temp}}, {{max_temp}}]);
+
+        svg.selectAll("g.x.axis").call(xAxis);
+        svg.selectAll("g.y.axis").call(yAxis);
+        svg.selectAll("path").data([data])
+            .attr("d", area);
+    };
+
+    now = new Date().getTime()
+    timeRange = rangeToDisplay * 60 * 60 * 1000
+    start = now - timeRange
+
+    var idx = 1
+    function reload(){
+        d3.json("/temps/"+idx, function(error, json) {
+            if (error) return console.warn(error);
+            current_idx = 0
+            json.forEach(function(d) {
+                d.dt = format.parse(d[1]);
+                d.temp = +d[2];
+                if(d.dt.getTime() > start ){
+                    data.push(d)
+                }
+                if(d[0] > current_idx){
+                    current_idx = d[0]
+                }
+            });
+            refresh()
+        });
+    }
+
+    reload()
+
+
+
+</script>

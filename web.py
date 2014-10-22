@@ -1,25 +1,51 @@
-from flask import Flask, send_file, request
-from flask import render_template
+from flask import Flask
+from flask import render_template, request
+import math
 from data_store import DataStore
-import json
 
 app = Flask(__name__)
 
-
+temp_range = 60
 
 @app.route('/')
 def index(name=None):
     db = DataStore()
-    temps = db.get_temps(0)
-    return render_template('index.html', temps=temps)
+    enabled,target_temp = db.get_settings()
+    db.shutdown()
+    min_temp = math.floor(target_temp - temp_range/2)
+    max_temp = math.ceil(target_temp + temp_range/2)
+    return render_template('index.html', enabled=enabled,
+                           target_temp=target_temp, min_temp=min_temp, max_temp=max_temp)
+
+@app.route('/history')
+def history(name=None):
+    db = DataStore()
+    enabled,target_temp = db.get_settings()
+    db.shutdown()
+    tr = request.args.get('tr')
+    if tr is None:
+        tr = 8
+    min_temp = math.floor(target_temp - temp_range/2)
+    max_temp = math.ceil(target_temp + temp_range/2)
+    return render_template('history.html', tr=tr,
+                           target_temp=target_temp, min_temp=min_temp, max_temp=max_temp)
 
 @app.route('/temps/<idx>')
 def temps(idx=0):
     db = DataStore()
     temps = db.get_temps(idx)
+    db.shutdown()
     return temps
 
-
+@app.route('/settings', methods=['POST'])
+def settings():
+    settings = request.get_json()
+    enabled = settings['enabled']
+    target_temp = settings['target_temp']
+    db = DataStore()
+    print 'Saving new settings: %s %s' % (enabled, target_temp)
+    db.save_settings(enabled, target_temp)
+    return "ok"
 
 if __name__ == '__main__':
     app.debug=True
