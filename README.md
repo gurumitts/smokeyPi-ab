@@ -17,7 +17,7 @@ The RasphberryPi runs 2 application:
   - Set the target temperature
   - Enable / disable the heat source
 
-![Alt text](//screenshot1.png?raw=true )
+![Alt text](https://raw.githubusercontent.com/gurumitts/smokeyPi-ab/master/screenshot1.png)
 
 **Please note** that I am not an expert by any means with electronic circuits, in fact a secondary object was to learn more about circuits.  
 
