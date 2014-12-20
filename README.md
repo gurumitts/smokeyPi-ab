@@ -38,6 +38,6 @@ The RasphberryPi runs 2 application:
 8. https://github.com/timofurrer/w1thermsensor
 
 #####Hardware schematic coming soon.
-
+-
 ##Screenshots
 ![Alt text](https://raw.githubusercontent.com/gurumitts/smokeyPi-ab/master/screenshot1.png)
