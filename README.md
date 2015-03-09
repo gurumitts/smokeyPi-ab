@@ -1,7 +1,7 @@
 smokeyPi-ab
 ===========
 A while back I built a homemade smoker based on the designs of Alton Brown:  http://www.foodnetwork.com/videos/channels/altons-pulled-pork.html
-<br> It worked and we had some really great eats but it was a lot of work to keep the smoker at the target temperature.  It took constant supervision and tweaking of the heat source to maintain it. 
+<br> It worked and we had some really great eats but it was a lot of work to keep the smoker at the target temperature.  It took constant supervision and tweaking of the heat source to maintain the target temperature. 
 
 
 To solve that problem (but really mostly to learn something new) I started this personal project.  Using a RasphberryPi to monitor the temperature inside the smoker and controlling the heat source directly will allow me to focus on the food and company instead of the heat source.
@@ -17,7 +17,7 @@ The RasphberryPi runs 2 application:
   - Set the target temperature
   - Enable / disable the heat source
 
-**Please note** that I am not an expert by any means with electronic circuits, in fact a secondary object was to learn more about circuits.  
+**Please note** that I am not an expert by any means with electronic circuits, in fact a secondary objective was to learn more about circuits.  
 
 
 ###Project dependencies:
@@ -38,6 +38,8 @@ The RasphberryPi runs 2 application:
 8. https://github.com/timofurrer/w1thermsensor
 
 #####Hardware schematic coming soon.
+In the meantime you can follow the water proof instructions located here:  https://learn.adafruit.com/adafruits-raspberry-pi-lesson-11-ds18b20-temperature-sensing/hardware
+
 -
 ##Screenshots
 ![Alt text](https://raw.githubusercontent.com/gurumitts/smokeyPi-ab/master/screenshot1.png)
