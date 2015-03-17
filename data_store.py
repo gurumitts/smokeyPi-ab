@@ -2,7 +2,6 @@ import sqlite3,json, random, time
 
 class DataStore:
 
-    sample_size = 10
 
     def __init__(self):
         #print 'Preparing data store...'
@@ -11,13 +10,18 @@ class DataStore:
         self.startup()
         #print 'data store is ready'
 
-    def save_settings(self, enabled, target_temp):
+    def save_settings(self, settings):
+        params = []
+        enabled = settings['enabled']
         if enabled:
-            params = ['1', target_temp]
+            params.append('1')
         else:
-            params = ['0', target_temp]
+            params.append('0')
+        params.extend([settings['target_temp'], settings['sample_size'], settings['tolerance']])
+
         cursor = self.connection.cursor()
-        cursor.execute("""update settings set ENABLED = ?, TARGET_TEMP = ? where id = 1 ;""", params)
+        cursor.execute("""update settings set ENABLED = ?, TARGET_TEMP = ?,
+            SAMPLE_SIZE = ?, TOLERANCE = ? where id = 1 ;""", params)
         self.connection.commit()
         cursor.close()
 
@@ -25,10 +29,12 @@ class DataStore:
         cursor = self.connection.cursor()
         cursor.execute("""SELECT * FROM settings WHERE id = 1""")
         r = cursor.fetchone()
-        enable = r['ENABLED'] == 1
-        target_temp = r['TARGET_TEMP']
+        print r
+        settings = {}
+        for key in r.keys():
+            settings[key.lower()] = r[key]
         cursor.close()
-        return enable, target_temp
+        return settings
 
     def get_heat_source_status(self):
         cursor = self.connection.cursor()
@@ -53,17 +59,14 @@ class DataStore:
 
     def get_control_data(self):
         cursor = self.connection.cursor()
-        cursor.execute("""select s.target_temp, s.heat_source, s.enabled,
+        cursor.execute("""select s.target_temp, s.heat_source, s.enabled, s.sample_size, s.tolerance,t.temp,
             (select round(avg(t.temp),1) from temperatures t where t.id in
-            (select id from temperatures ORDER BY dt DESC Limit %s))
-            as avg_temp from settings s """ % self.sample_size)
+            (select id from temperatures tm ORDER BY dt DESC Limit (select sample_size from settings where id =1)))
+            as avg_temp from settings s, temperatures t where t.id = (select MAX(id) from temperatures) """)
         r = cursor.fetchone()
         control_data = {}
-        control_data['enabled'] = r['enabled']
-        control_data['heat_source'] = r['heat_source']
-        control_data['target_temp'] = r['target_temp']
-        control_data['avg_temp'] = r['avg_temp']
-
+        for key in r.keys():
+            control_data[key.lower()] = r[key]
         cursor.close()
         return control_data
 
@@ -73,8 +76,8 @@ class DataStore:
         cursor = self.connection.cursor()
         cursor.execute("""select t.id,datetime(t.dt,'localtime'),
             t.temp,s.heat_source,(select round(avg(t.temp),1) from temperatures t where t.id in
-            (select id from temperatures ORDER BY dt DESC Limit %s)) as avg_temp
-            from temperatures t,settings s where t.id > ?""" % self.sample_size, [start_idx])
+            (select id from temperatures ORDER BY dt DESC Limit (select sample_size from settings where id =1))) as avg_temp
+            from temperatures t,settings s where t.id > ?""", [start_idx])
         rows = cursor.fetchall()
         temps = []
         for row in rows:
@@ -111,25 +114,32 @@ class DataStore:
                 ID INTEGER PRIMARY KEY   AUTOINCREMENT,
                 ENABLED INTEGER,
                 TARGET_TEMP REAL,
-                HEAT_SOURCE TEXT);""")
-            cursor.execute("""insert into settings (ENABLED, TARGET_TEMP, HEAT_SOURCE )
-                values(?,?,?);""", ['0', '200', 'off'])
+                HEAT_SOURCE TEXT,
+                SAMPLE_SIZE INTEGER,
+                TOLERANCE REAL);""")
+            cursor.execute("""insert into settings (ENABLED, TARGET_TEMP,
+                HEAT_SOURCE,SAMPLE_SIZE, TOLERANCE )
+                values(?,?,?,?,?);""", ['0', '200', 'off', '20', '5'])
             print 'done!'
         finally:
             cursor.close()
+
 
 if __name__ == '__main__':
     db = DataStore()
 
     print db.get_settings()
-    db.save_settings(False,210)
-    #print db.get_settings()
+    db.save_settings({'enabled': False, 'target_temp': 211, 'sample_size': 100, 'tolerance': 5})
+    print db.get_settings()
     print db.get_control_data()
+
     count = 1
     while count < 20000:
         db.add_temperature(205 + 12*random.random() )
         count += 1
         time.sleep(1)
+        temps = json.loads(db.get_temps(count-1))
+        print temps[len(temps)-1]
         print db.get_control_data()
 
     print db.get_control_data()

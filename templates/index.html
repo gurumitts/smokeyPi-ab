@@ -91,6 +91,21 @@
                                     <input type="input" class="form-control" id="target_temp"
                                            placeholder="205" value="{{target_temp}}"/>
                                 </div>
+
+                                <label for="sample_size" class="col-sm-3 control-label">Target Temp</label>
+
+                                <div class="col-sm-9">
+                                    <input type="input" class="form-control" id="sample_size"
+                                           placeholder="20" value="{{sample_size}}"/>
+                                </div>
+
+                                <label for="tolerance" class="col-sm-3 control-label">Target Temp</label>
+
+                                <div class="col-sm-9">
+                                    <input type="input" class="form-control" id="tolerance"
+                                           placeholder="in degrees" value="{{tolerance}}"/>
+                                </div>
+
                             </div>
                         </form>
                     </div>
@@ -188,7 +203,9 @@ toggleAutoReload()
 
 function saveSettings(e,s) {
     var body = {'enabled': $('#enabled').prop('checked'),
-                'target_temp': $('#target_temp').val()}
+                'target_temp': $('#target_temp').val(),
+                'sample_size': $('#sample_size').val(),
+                'tolerance'  : $('#tolerance').val()}
     console.log(body)
     console.log(e)
     $.ajax({

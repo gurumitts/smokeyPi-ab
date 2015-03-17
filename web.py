@@ -10,25 +10,23 @@ temp_range = 60
 @app.route('/')
 def index(name=None):
     db = DataStore()
-    enabled,target_temp = db.get_settings()
+    settings = db.get_settings()
     db.shutdown()
-    min_temp = math.floor(target_temp - temp_range/2)
-    max_temp = math.ceil(target_temp + temp_range/2)
-    return render_template('index.html', enabled=enabled,
-                           target_temp=target_temp, min_temp=min_temp, max_temp=max_temp)
+    min_temp = math.floor(settings['target_temp'] - temp_range/2)
+    max_temp = math.ceil(settings['target_temp'] + temp_range/2)
+    return render_template('index.html', min_temp=min_temp, max_temp=max_temp, **settings)
 
 @app.route('/history')
 def history(name=None):
     db = DataStore()
-    enabled,target_temp = db.get_settings()
+    settings = db.get_settings()
     db.shutdown()
     tr = request.args.get('tr')
     if tr is None:
         tr = 8
-    min_temp = math.floor(target_temp - temp_range/2)
-    max_temp = math.ceil(target_temp + temp_range/2)
-    return render_template('history.html', tr=tr,
-                           target_temp=target_temp, min_temp=min_temp, max_temp=max_temp)
+    min_temp = math.floor(settings['target_temp'] - temp_range/2)
+    max_temp = math.ceil(settings['target_temp'] + temp_range/2)
+    return render_template('history.html', tr=tr, min_temp=min_temp, max_temp=max_temp, **settings)
 
 @app.route('/temps/<idx>')
 def temps(idx=0):
@@ -40,13 +38,11 @@ def temps(idx=0):
 @app.route('/settings', methods=['POST'])
 def settings():
     settings = request.get_json()
-    enabled = settings['enabled']
-    target_temp = settings['target_temp']
     db = DataStore()
-    print 'Saving new settings: %s %s' % (enabled, target_temp)
-    db.save_settings(enabled, target_temp)
+    print 'Saving new settings: ' % settings
+    db.save_settings(settings)
     return "ok"
 
 if __name__ == '__main__':
-    app.debug=True
+    app.debug = True
     app.run(host='0.0.0.0')

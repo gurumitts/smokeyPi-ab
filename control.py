@@ -37,7 +37,7 @@ def heat_source_off():
 def start_jobs(target_temp):
     print 'Loading DB'
     db = get_db()
-    db.save_settings(False,target_temp)
+    db.save_settings({'enabled': False, 'target_temp': target_temp, 'sample_size': 20, 'tolerance': 5})
     db.shutdown()
     print 'DB load complete'
     get_sensor()
@@ -68,6 +68,9 @@ def control_power():
         enabled = control_data['enabled']
         heat_source = control_data['heat_source']
         avg_temp = control_data['avg_temp']
+        tolerance = control_data['tolerance']
+        sample_size = control_data['sample_size']
+        temp = control_data['temp']
         if avg_temp is None:
             avg_temp = 1
         if enabled is 0:
@@ -75,7 +78,7 @@ def control_power():
             db.set_heat_source_status('off')
             print 'disabled turning off heat'
         else:
-            if avg_temp < target_temp:
+            if temp < target_temp and avg_temp - tolerance < target_temp:
                 heat_source_on()
                 db.set_heat_source_status('on')
                 print 'heat is on'
