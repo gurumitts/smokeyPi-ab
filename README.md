@@ -1,6 +1,7 @@
 smokeyPi-ab
 ===========
-Now also sutiable for a sous vide set up.
+
+Now also suitable for a sous vide set up.
 
 A while back I built a homemade smoker based on the designs of Alton Brown:  http://www.foodnetwork.com/videos/channels/altons-pulled-pork.html
 <br> It worked and we had some really great eats but it was a lot of work to keep the smoker at the target temperature.  It took constant supervision and tweaking of the heat source to maintain the target temperature. 
@@ -19,8 +20,8 @@ The RasphberryPi runs 2 application:
   - Set the target temperature
   - Enable / disable the heat source
 
-**Please note** that I am not an expert by any means with electronic circuits, in fact a secondary objective was to learn more about circuits.  
-
+**DO NOT LEAVE ANY SETUP USING THIS CODE UNATTENDED.  I AM NOT RESPONSIBLE FOR ANY DAMAGES**
+**Please note** that I am not an expert by any means with electronic circuits **Be careful**
 
 ###Project dependencies:
 
