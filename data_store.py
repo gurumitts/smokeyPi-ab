@@ -1,14 +1,13 @@
-import sqlite3,json, random, time
+import sqlite3, json, random, time
+
 
 class DataStore:
-
-
     def __init__(self):
-        #print 'Preparing data store...'
+        # print 'Preparing data store...'
         self.connection = sqlite3.connect('app.sqlite3.db')
         self.connection.row_factory = sqlite3.Row
         self.startup()
-        #print 'data store is ready'
+        # print 'data store is ready'
 
     def save_settings(self, settings):
         params = []
@@ -17,11 +16,12 @@ class DataStore:
             params.append('1')
         else:
             params.append('0')
-        params.extend([settings['target_temp'], settings['sample_size'], settings['tolerance']])
+        params.extend([settings['target_temp'], settings['sample_size'],
+                       settings['tolerance'], settings['heat_duration'], settings['cool_duration']])
 
         cursor = self.connection.cursor()
         cursor.execute("""update settings set ENABLED = ?, TARGET_TEMP = ?,
-            SAMPLE_SIZE = ?, TOLERANCE = ? where id = 1 ;""", params)
+            SAMPLE_SIZE = ?, TOLERANCE = ?, heat_duration = ?, cool_duration = ? where id = 1 ;""", params)
         self.connection.commit()
         cursor.close()
 
@@ -45,7 +45,7 @@ class DataStore:
         cursor.close()
         return heat_source
 
-    def set_heat_source_status(self,status):
+    def set_heat_source_status(self, status):
         cursor = self.connection.cursor()
         cursor.execute("""update settings set HEAT_SOURCE = ? where id = 1 ;""", [status])
         self.connection.commit()
@@ -59,10 +59,24 @@ class DataStore:
 
     def get_control_data(self):
         cursor = self.connection.cursor()
-        cursor.execute("""select s.target_temp, s.heat_source, s.enabled, s.sample_size, s.tolerance,t.temp,
+        cursor.execute("""select s.target_temp, s.heat_source, s.enabled,
+            s.sample_size, s.tolerance, s.heat_duration, s.cool_duration, t.temp,
             (select round(avg(t.temp),1) from temperatures t where t.id in
-            (select id from temperatures tm ORDER BY dt DESC Limit (select sample_size from settings where id =1)))
-            as avg_temp from settings s, temperatures t where t.id = (select MAX(id) from temperatures) """)
+                (select id from temperatures tm ORDER BY dt DESC Limit
+                    (select sample_size from settings where id =1)))
+            as avg_temp,
+            (select ((temp2 - temp1) / (dt2 - dt1)) as slope from
+                ((select strftime('%s', dt)  as dt1 from
+                    (select * from temperatures ORDER BY dt DESC Limit
+                        (select sample_size from settings where id =1) )order by dt asc limit 1),
+                (select temp as temp1 from (select * from temperatures ORDER BY dt DESC Limit
+                        (select sample_size from settings where id =1) )order by dt asc limit 1) ,
+                (select strftime('%s', dt)  as dt2 from (select * from temperatures ORDER BY dt DESC Limit
+                        (select sample_size from settings where id =1) )order by dt desc limit 1) ,
+                (select temp as temp2 from (select * from temperatures ORDER BY dt DESC Limit
+                        (select sample_size from settings where id =1) )order by dt desc limit 1) ))
+            as slope
+            from settings s, temperatures t where t.id = (select MAX(id) from temperatures) """)
         r = cursor.fetchone()
         control_data = {}
         for key in r.keys():
@@ -81,7 +95,7 @@ class DataStore:
         rows = cursor.fetchall()
         temps = []
         for row in rows:
-            temps.append([row[0],row[1],row[2],row[3],row[4]])
+            temps.append([row[0], row[1], row[2], row[3], row[4]])
         return json.dumps(temps)
 
     def shutdown(self):
@@ -91,7 +105,7 @@ class DataStore:
         cursor = self.connection.cursor()
         try:
             cursor.execute('select count(*) from temperatures')
-            #print cursor.fetchone()
+            # print cursor.fetchone()
         except Exception as e:
             print e.message
             print 'Required table not found... creating temperatures table...'
@@ -116,10 +130,12 @@ class DataStore:
                 TARGET_TEMP REAL,
                 HEAT_SOURCE TEXT,
                 SAMPLE_SIZE INTEGER,
-                TOLERANCE REAL);""")
+                TOLERANCE REAL,
+                COOL_DURATION INTEGER,
+                HEAT_DURATION INTEGER);""")
             cursor.execute("""insert into settings (ENABLED, TARGET_TEMP,
                 HEAT_SOURCE,SAMPLE_SIZE, TOLERANCE )
-                values(?,?,?,?,?);""", ['0', '200', 'off', '20', '5'])
+                values(?,?,?,?,?);""", ['0', '200', 'off', '20', '5', '30000', '30000'])
             print 'done!'
         finally:
             cursor.close()
@@ -129,17 +145,19 @@ if __name__ == '__main__':
     db = DataStore()
 
     print db.get_settings()
-    db.save_settings({'enabled': False, 'target_temp': 211, 'sample_size': 100, 'tolerance': 5})
+    db.save_settings({'enabled': False, 'target_temp': 211,
+                      'sample_size': 100, 'tolerance': 5, 'heat_duration': 30000, 'cool_duration':30000})
     print db.get_settings()
+    db.add_temperature(205 + 12 * random.random())
     print db.get_control_data()
 
     count = 1
     while count < 20000:
-        db.add_temperature(205 + 12*random.random() )
+        db.add_temperature(205 + 12 * random.random())
         count += 1
         time.sleep(1)
-        temps = json.loads(db.get_temps(count-1))
-        print temps[len(temps)-1]
+        temps = json.loads(db.get_temps(count - 1))
+        print temps[len(temps) - 1]
         print db.get_control_data()
 
     print db.get_control_data()

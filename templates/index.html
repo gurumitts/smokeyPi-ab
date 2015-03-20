@@ -25,8 +25,6 @@
     }
 
 
-
-
 </style>
 <body>
 <div class="container">
@@ -35,10 +33,10 @@
         <h1>SmokeyPi-ab</h1>
     </div>
 
-   <p class="lead">Temperature current: <span style="color: navy" id="currentTemp">78.78</span>,
-       Average: <span class="text-info" id="averageTemp">80</span>,
-       Target: <span class="text-danger" id="targetTemp">{{target_temp}}</span>
-       <br/> Heat source is <span id="heatSource">on</span></p>
+    <p class="lead">Temperature current: <span style="color: navy" id="currentTemp">78.78</span>,
+        Average: <span class="text-info" id="averageTemp">80</span>,
+        Target: <span class="text-danger" id="targetTemp">{{target_temp}}</span>
+        <br/> Heat source is <span id="heatSource">on</span></p>
 
     <div class="row">
 
@@ -50,10 +48,10 @@
     </div>
     <p class="lead">
 
-                <input id="enabled" type="checkbox"
-                       {% if enabled %}
-                            checked
-                       {% endif %}
+        <input id="enabled" type="checkbox"
+               {% if enabled %}
+               checked
+               {% endif %}
                 />
 
         <button class="btn btn-primary btn-xs" id="mod" data-toggle="modal" data-target="#myModal">
@@ -85,25 +83,39 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label for="target_temp" class="col-sm-3 control-label">Target Temp</label>
+                                <label for="target_temp" class="col-sm-5 control-label">Target Temp</label>
 
-                                <div class="col-sm-9">
+                                <div class="col-sm-6">
                                     <input type="input" class="form-control" id="target_temp"
                                            placeholder="205" value="{{target_temp}}"/>
                                 </div>
 
-                                <label for="sample_size" class="col-sm-3 control-label">Target Temp</label>
+                                <label for="sample_size" class="col-sm-5 control-label">Sample Size</label>
 
-                                <div class="col-sm-9">
+                                <div class="col-sm-6">
                                     <input type="input" class="form-control" id="sample_size"
                                            placeholder="20" value="{{sample_size}}"/>
                                 </div>
 
-                                <label for="tolerance" class="col-sm-3 control-label">Target Temp</label>
+                                <label for="tolerance" class="col-sm-5 control-label">Tolerance(deg F)</label>
 
-                                <div class="col-sm-9">
+                                <div class="col-sm-6">
                                     <input type="input" class="form-control" id="tolerance"
                                            placeholder="in degrees" value="{{tolerance}}"/>
+                                </div>
+
+                                <label for="heat_duration" class="col-sm-5 control-label">Heat Duration(ms)</label>
+
+                                <div class="col-sm-6">
+                                    <input type="input" class="form-control" id="heat_duration"
+                                           placeholder="in degrees" value="{{heat_duration}}"/>
+                                </div>
+
+                                <label for="cool_duration" class="col-sm-5 control-label">Cool Duration(ms)</label>
+
+                                <div class="col-sm-6">
+                                    <input type="input" class="form-control" id="cool_duration"
+                                           placeholder="in degrees" value="{{cool_duration}}"/>
                                 </div>
 
                             </div>
@@ -205,7 +217,9 @@ function saveSettings(e,s) {
     var body = {'enabled': $('#enabled').prop('checked'),
                 'target_temp': $('#target_temp').val(),
                 'sample_size': $('#sample_size').val(),
-                'tolerance'  : $('#tolerance').val()}
+                'tolerance'  : $('#tolerance').val(),
+                'heat_duration': $('#heat_duration').val(),
+                'cool_duration': $('#cool_duration').val()}
     console.log(body)
     console.log(e)
     $.ajax({
@@ -244,6 +258,7 @@ $( ".btn" ).click(setTimeRangeToDisplay)
 
 $("#enabled").bootstrapSwitch()
 $("#enabled").on('switchChange.bootstrapSwitch',saveSettings )
+
 
 
 

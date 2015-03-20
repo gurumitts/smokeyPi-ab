@@ -1,5 +1,6 @@
 .idea
 *.sqlite3.db
+working/*
 
 # Windows image file caches
 Thumbs.db
