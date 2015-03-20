@@ -17,8 +17,10 @@ print GPIO.VERSION
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(heat_source_pin, GPIO.OUT)
 
+
 def current_time():
     return int(round(time.time() * 1000))
+
 
 def get_db():
     db = DataStore()
@@ -76,7 +78,7 @@ def start_jobs(target_temp):
     print 'Loading DB'
     db = get_db()
     db.save_settings({'enabled': False, 'target_temp': target_temp,
-                      'sample_size': 20, 'tolerance': 5, 'heat_duration': 30000, 'cool_duration':30000})
+                      'sample_size': 20, 'tolerance': 5, 'heat_duration': 30000, 'cool_duration': 30000})
     db.shutdown()
     print 'DB load complete'
     get_sensor()

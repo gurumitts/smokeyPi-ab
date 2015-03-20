@@ -3,7 +3,7 @@ import sqlite3, json, random, time
 
 class DataStore:
     def __init__(self):
-        # print 'Preparing data store...'
+        # print 'Preparing data store..'
         self.connection = sqlite3.connect('app.sqlite3.db')
         self.connection.row_factory = sqlite3.Row
         self.startup()
